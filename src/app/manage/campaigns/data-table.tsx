@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link";
+import Link from "next/link"
 
 import {
   ColumnDef,
@@ -30,8 +30,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-import { DataTablePagination }  from "@/components/ui/data-pagination"
-import { DataTableViewOptions }  from "@/components/ui/column-toggle"
+import { DataTablePagination } from "@/components/ui/data-pagination"
+import { DataTableViewOptions } from "@/components/ui/column-toggle"
 
 import {
   DropdownMenu,
@@ -39,7 +39,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
- 
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
@@ -54,8 +54,7 @@ export function DataTable<TData, TValue>({
     []
   )
 
-  const [columnVisibility, setColumnVisibility] =
-  React.useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
   const table = useReactTable({
@@ -67,21 +66,21 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,    
+    onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
-      columnVisibility,      
+      columnVisibility,
       rowSelection,
     },
   })
 
+  const rowModel = table.getRowModel();
+
   return (
     <div>
-
       <div className="flex items-center py-4">
-
         <Input
           placeholder="Filtrer les campagnes..."
           value={(table.getColumn("campaign_name")?.getFilterValue() as string) ?? ""}
@@ -92,7 +91,6 @@ export function DataTable<TData, TValue>({
         />
 
         <DataTableViewOptions table={table} />
-
       </div>
       <div className="rounded-md border">
         <Table>
@@ -105,9 +103,9 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   )
                 })}
@@ -115,23 +113,20 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+            {rowModel?.rows?.length ? (
+              rowModel.rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {['campaign_id'].includes(cell.column.id) ? (
                         <Link href={`/manage/campaigns/${row.original.campaign_id}`}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}                          
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </Link>
                       ) : cell.column.id === 'campaign_name' ? (
                         <Link href={`/manage/campaigns/${row.original.campaign_id}`}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           <br />
-                          <span class="text-xs">({`${row.original.campaign_id}`} - {`${row.original.campaign_id}`})</span>
+                          <span className="text-xs">({`${row.original.campaign_id}`} - {`${row.original.campaign_id}`})</span>
                         </Link>
                       ) : cell.column.id === 'advertiser_name' ? (
                         <Link href={`/manage/advertisers/${row.original.advertiser_id}`}>
@@ -142,7 +137,6 @@ export function DataTable<TData, TValue>({
                       )}
                     </TableCell>
                   ))}
-
                 </TableRow>
               ))
             ) : (
@@ -158,8 +152,6 @@ export function DataTable<TData, TValue>({
       <div className="space-x-2 py-4">
         <DataTablePagination table={table} />
       </div>
-
     </div>
-
   )
 }

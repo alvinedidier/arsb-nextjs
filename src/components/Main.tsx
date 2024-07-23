@@ -322,7 +322,7 @@ export default function Main() {
                         </div>
                     </div>
                 </div>
-                <Script>
+                <Script id="gestion-mobile-nav">
                     {`
                         var sideBar = document.getElementById("mobile-nav");
                         var openSidebar = document.getElementById("openSideBar");

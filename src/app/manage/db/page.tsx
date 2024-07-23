@@ -61,7 +61,7 @@ export default async function Page() {
         </TableHeader>
         <TableBody>
         {data.map(campaign => (
-          <TableRow>
+          <TableRow key={campaign.campaign_id}>
             <TableCell className="font-medium">{campaign.campaign_id}</TableCell>
             <TableCell><Link href={`/manage/campaigns/${campaign.campaign_id}`}>{campaign.campaign_name}</Link></TableCell>
             <TableCell>{campaign.campaign_crypt}</TableCell>

@@ -96,10 +96,10 @@ export const columns: ColumnDef<Campaigns>[] = [
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(campaign.advertiser_id)}
             >
-              Copie l'annonceur ID
+              Copie l annonceur ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Voir l'annonceur</DropdownMenuItem>
+            <DropdownMenuItem>Voir l annonceur</DropdownMenuItem>
             <DropdownMenuItem>Voir la campagne</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Voir la campagne sur SMARTADSERVER</DropdownMenuItem>

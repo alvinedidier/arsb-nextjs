@@ -22,10 +22,12 @@ import {
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 export type Campaigns = {
-  id: string
+  campaign_id: string
   campaign_status_id : "0" | "1" | "2" | "3"
   campaign_name: string
+  advertiser_id: string
   advertiser_name: string
+  campaign_crypt: string
 }
 
 export const columns: ColumnDef<Campaigns>[] = [
@@ -96,10 +98,10 @@ export const columns: ColumnDef<Campaigns>[] = [
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(campaign.advertiser_id)}
             >
-              Copie l'annonceur ID
+              Copie l annonceur ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Voir l'annonceur</DropdownMenuItem>
+            <DropdownMenuItem>Voir l annonceur</DropdownMenuItem>
             <DropdownMenuItem>Voir la campagne</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Voir la campagne sur SMARTADSERVER</DropdownMenuItem>

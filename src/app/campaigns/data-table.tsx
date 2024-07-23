@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link";
+import Script from "next/script";
 
 import {
   ColumnDef,
@@ -14,9 +15,9 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
 import {
   Table,
@@ -25,21 +26,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-import { DataTablePagination }  from "@/components/ui/data-pagination"
-import { DataTableViewOptions }  from "@/components/ui/column-toggle"
+import { DataTablePagination } from "@/components/ui/data-pagination";
+import { DataTableViewOptions } from "@/components/ui/column-toggle";
 
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
- 
+} from "@/components/ui/dropdown-menu";
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
@@ -55,7 +56,7 @@ export function DataTable<TData, TValue>({
   )
 
   const [columnVisibility, setColumnVisibility] =
-  React.useState<VisibilityState>({})
+    React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
   const table = useReactTable({
@@ -67,21 +68,19 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,    
+    onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
-      columnVisibility,      
+      columnVisibility,
       rowSelection,
-    },
+    }
   })
 
   return (
-    <div>
-
+   {/*  <div>
       <div className="flex items-center py-4">
-
         <Input
           placeholder="Filtrer les campagnes..."
           value={(table.getColumn("campaign_name")?.getFilterValue() as string) ?? ""}
@@ -90,10 +89,9 @@ export function DataTable<TData, TValue>({
           }
           className="max-w-sm"
         />
-
         <DataTableViewOptions table={table} />
-
       </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -124,13 +122,12 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {['campaign_id', 'campaign_name'].includes(cell.column.id) ? (
-                        <Link href={`/manage/campaigns/${row.original.campaign_id}`}>
+
+                        <Link href={`/manage/campaigns/${row.campaign_id}`}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          <br />
-                          <span class="text-xs">({`${row.original.campaign_id}`} - {`${row.original.campaign_id}`} )</span>
                         </Link>
                       ) : cell.column.id === 'advertiser_name' ? (
-                        <Link href={`/manage/advertisers/${row.original.advertiser_id}`}>
+                        <Link href={`/manage/advertisers/${row.advertiser_id}`}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </Link>
                       ) : (
@@ -151,11 +148,12 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
+
       <div className="space-x-2 py-4">
         <DataTablePagination table={table} />
       </div>
 
     </div>
-
+    */}
   )
 }

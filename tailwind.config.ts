@@ -18,9 +18,9 @@ const config = {
       },
     },
     extend: {
-     /* fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
-      },*/
+      fontFamily: {
+        montserrat: ['Montserrat', 'sans-serif'], // Ajoute Montserrat ici
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-const pool = require('../../../lib/db');
+const pool = require('@/lib/db');
 
 export async function GET(request) {
   try {

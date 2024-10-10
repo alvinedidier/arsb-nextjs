@@ -1,5 +1,6 @@
+// route.ts
 import { NextResponse } from 'next/server';
-const pool = require('../../../lib/db');
+const pool = require('@/lib/db');
 
 export async function GET(request) {
   try {
@@ -87,11 +88,11 @@ export async function GET(request) {
 
     // Vérifier le format des données avant de les renvoyer
     if (!rows || rows.length === 0) {
-      return NextResponse.json({ message: 'Aucune campagne trouvée' }, { status: 404 });
+      return NextResponse.json({ count : 0, message: 'Aucune campagne trouvée' }, { status: 200 });
     }
 
     // Retourner les résultats
-    return NextResponse.json({ campaigns: rows });
+    return NextResponse.json({ count : rows.length, campaigns: rows });
   } catch (error) {
     console.error('Erreur lors de la récupération des campagnes :', error);
 
@@ -104,4 +105,72 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Erreur lors de la récupération des campagnes' }, { status: 500 });
     }
   }
+}
+
+export async function POST(request) {
+  // console.log('POST Campaigns : ')
+   try {
+    const body = await request.json();
+    const {
+      campaign_id,
+      campaign_name,
+      campaign_crypt,
+      advertiser_id,
+      agency_id,
+      campaign_start_date,
+      campaign_end_date,
+      campaign_status_id,
+      campaign_archived,
+      created_at,
+      updated_at
+    } = body;
+
+    // Construire la requête SQL pour insérer une nouvelle campagne
+    const query = `
+      INSERT INTO asb_campaigns (
+        campaign_id,
+        campaign_name,
+        campaign_crypt,
+        advertiser_id,
+        agency_id,
+        campaign_start_date,
+        campaign_end_date,
+        campaign_status_id,
+        campaign_archived,
+        created_at,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const queryParams = [
+      campaign_id,
+      campaign_name,
+      campaign_crypt,
+      advertiser_id,
+      agency_id,
+      campaign_start_date,
+      campaign_end_date,
+      campaign_status_id,
+      campaign_archived,
+      created_at,
+      updated_at
+    ];
+
+    // Exécuter la requête SQL avec des paramètres préparés pour éviter les injections SQL
+    await pool.query(query, queryParams);
+
+    // Retourner une réponse de succès
+    return NextResponse.json({ message: 'Campagne ajoutée avec succès' }, { status: 201 });
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout de la campagne :', error);
+
+    // Retourner une réponse d'erreur plus détaillée
+    if (error.code === 'ER_ACCESS_DENIED_ERROR') {
+      return NextResponse.json({ error: 'Erreur de connexion à la base de données' }, { status: 500 });
+    } else if (error.code === 'ER_BAD_DB_ERROR') {
+      return NextResponse.json({ error: 'Base de données introuvable' }, { status: 500 });
+    } else {
+      return NextResponse.json({ error: 'Erreur lors de l\'ajout de la campagne' }, { status: 500 });
+    }
+  } 
 }

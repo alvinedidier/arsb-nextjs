@@ -14,7 +14,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Eye, MousePointerClick, Percent, Play, Repeat, Users, Calendar, DollarSign, Store, Settings, Edit, ExternalLink, FileText, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { ToastAction } from "@/components/ui/toast"
 
@@ -36,7 +36,10 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 
 import CardCampaign from '@/components/ui/card-campaign';
 import { formatDate, calculateDaysBetween, calculateDaysFromEndToToday } from '@/components/utils/date';
-import { DataTable, Campaign } from '../../../../components/DataTableCampaigns';
+import { DataTable, Campaign } from '@/components/DataTableCampaigns';
+
+// Importer le composant à afficher lorsque la campagne n'existe pas
+import DbCampaign from "@/components/db/DbCampaign"; // Assurez-vous d'importer votre composant
 
 interface PageProps {
   params: {
@@ -61,48 +64,56 @@ const deviceData = [
 ]
 
 export default function Page({ params }: PageProps) {
- const [screenshots, setScreenshots] = useState<File[]>([]);
- const [campaign, setCampaign] = useState<Campaign | null>(null);
- const [error, setError] = useState<string | null>(null);
- const [loading, setLoading] = useState(true);
-// Ajoutez un état pour gérer l'ouverture de l'AlertDialog
-const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [screenshots, setScreenshots] = useState<File[]>([]);
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  // Ajoutez un état pour gérer l'ouverture de l'AlertDialog
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-const { toast } = useToast()
+  const { toast } = useToast();
 
-useEffect(() => {
+  useEffect(() => {
     const fetchCampaign = async () => {
-      if (!params.id || !Number.isInteger(Number(params.id))) {
+      
+      if (!params.id || isNaN(Number(params.id))) {
         setError("L'identifiant de la campagne est invalide.");
         setLoading(false);
         return;
       }
-  
-      try {
+
+       try {
         const queryParams = new URLSearchParams({
           campaign_id: params.id.toString()
         }).toString();
-  
-        const response = await fetch(`/api/campaigns?${queryParams}`, { next: { revalidate: 3600 } });
+
+        const response = await fetch(`/api/db/campaigns?${queryParams}`, { next: { revalidate: 3600 } });
+      
         if (!response.ok) {
-          setError("Campagne non trouvée.");
-          setLoading(false);
-          return;
+          setError(`Campagne non trouvée. - ${params.id}`);
         }
-        const campaignData = await response.json();
+
+        const campaignData = await response.json(); 
+
+        // Vérifiez si des campagnes ont été trouvées
+        if (!campaignData.campaigns || !Array.isArray(campaignData.campaigns) || campaignData.campaigns.length === 0) {
+          setError("Aucune campagne trouvée."); // Vous pouvez garder cette ligne si vous souhaitez gérer l'état d'erreur
+         // return <NotFoundComponent />; // Retournez le composant NotFoundComponent
+        }
+
         setCampaign(campaignData.campaigns[0]); // Assurez-vous de récupérer la première campagne
-      } catch (error) {
-        console.error('Erreur lors de la récupération de la campagne:', error);
-        setError("Une erreur s'est produite lors de la récupération de la campagne.");
+     } catch (error) {
+        /*console.error('Erreur lors de la récupération de la campagne :', error);*/
+        setError(`Une erreur s'est produite lors de la récupération de la campagne : ${error}.`);
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchCampaign();
-  
+
   }, [params.id]);
-  
+
   const handleScreenshotUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setScreenshots(Array.from(event.target.files))
@@ -111,10 +122,15 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <>       
+      <>
         <Skeleton className="h-70 w-full mb-4" />
       </>
     );
+  }
+
+  if (!campaign) {
+    // Charge les données de la campagne si elle n'existe pas
+    return <DbCampaign table="campaign" id={params.id}/>;
   }
 
   if (error) {
@@ -129,92 +145,96 @@ useEffect(() => {
   }
 
   // Utilisation des fonctions pour récupérer les dates
-const formattedDateStart = formatDate(campaign.campaign_start_date);
-const formattedDateEnd = formatDate(campaign.campaign_end_date);
-const daysBetween = calculateDaysBetween(campaign.campaign_start_date, campaign.campaign_end_date);
-const daysFromEndToToday = calculateDaysFromEndToToday(campaign.campaign_end_date);
+  const formattedDateStart = formatDate(campaign.campaign_start_date);
+  const formattedDateEnd = formatDate(campaign.campaign_end_date);
+  const daysBetween = calculateDaysBetween(campaign.campaign_start_date, campaign.campaign_end_date);
+  const daysFromEndToToday = calculateDaysFromEndToToday(campaign.campaign_end_date);
 
-function handleDelete() {
-  console.log('Function lol triggered');
-
+  function handleDelete() {
+    console.log('Function lol triggered');
+    // Fermez le dialogue ici
+    setIsDialogOpen(false);
+    alert('lol')
+    // Ajoutez votre logique de suppression ici
     toast({
       title: "Scheduled: Catch up ",
       description: "Friday, February 10, 2023 at 5:57 PM",
       action: (
         <ToastAction altText="Goto schedule to undo">Undo</ToastAction>
       ),
-    })
-}
+    });
+  }
 
   return (
     <>
       <div className="p-6 max-w-7xl mx-auto">
-       
-        <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold mb-6">{campaign.campaign_name}</h1>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <Settings className="mr-2 h-4 w-4" /> Paramètres
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-60">
-            <DropdownMenuItem>
-              <Edit className="mr-2 h-4 w-4" />
-              <span>Mettre à jour</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link href={`https://manage.smartadserver.com/n/campaign/${campaign.campaign_id}/insertion`} target="_blank" className="flex items-center">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                <span>Aller sur SmartAdServer</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>
-              <span>Rapport</span>
-            </DropdownMenuLabel>
-            <DropdownMenuItem>
-              <Link href={`/r/${campaign.campaign_crypt}`} className="flex items-center">
-                <FileText className="mr-2 h-4 w-4" />
-                <span>Générer</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-      className="hover:bg-black hover:text-white text-red-600"
-      onClick={() => setIsDialogOpen(true)}
-    >
-      <Trash2 className="mr-2 h-4 w-4" />
-      <span>Supprimer</span>
-    </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
 
-        {/* Déplacez l'AlertDialog en dehors du DropdownMenu */}
-<AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-  <AlertDialogContent>
-    <AlertDialogHeader>
-      <AlertDialogTitle>Supprimer le rapport</AlertDialogTitle>
-      <AlertDialogDescription>
-        Tu souhaites supprimer le rapport de campagne ?
-      </AlertDialogDescription>
-    </AlertDialogHeader>
-    <AlertDialogFooter>
-      <AlertDialogCancel>Annuler</AlertDialogCancel>
-      <AlertDialogAction className="bg-red-500 text-white" onClick={handleDelete}>Supprimer</AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
-      </div>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold mb-6">{campaign.campaign_name}</h1>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="bg-slate-900 text-white">
+                <Settings className="mr-2 h-4 w-4" /> Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-60">
+              <DropdownMenuItem>
+                <Edit className="mr-2 h-4 w-4" />
+                <span>Mettre à jour</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Link href={`https://manage.smartadserver.com/n/campaign/${campaign.campaign_id}/insertion`} target="_blank" className="flex items-center">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  <span>Aller sur SmartAdServer</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>
+                <span>Rapport</span>
+              </DropdownMenuLabel>
+              <DropdownMenuItem>
+                <Link href={`/r/${campaign.campaign_crypt}`} className="flex items-center">
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>Générer</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="hover:bg-black hover:text-white text-red-600 cursor-pointer"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Supprimer</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Déplacez l'AlertDialog en dehors du DropdownMenu */}
+          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer le rapport</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tu souhaites supprimer le rapport de campagne ?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction className="bg-red-500 text-white" onClick={() => handleDelete()}>Supprimer</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+          
           <CardCampaign
-          title="Nom de l'annonceur"
-          icon={Store}
-          value={campaign.advertiser_name}
-          link={`/manage/advertisers/${campaign.advertiser_id}`}
-        />
+            title="Nom de l'annonceur"
+            icon={Store}
+            value={campaign.advertiser_name}
+            link={`/manage/advertisers/${campaign.advertiser_id}`}
+          />
 
           <CardCampaign
             title="Période de diffusion"
@@ -228,7 +248,7 @@ function handleDelete() {
             value={campaign ? campaign.budget : 'Chargement...'}
             description="1,087 € / jour"
           />
-       
+
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-6">

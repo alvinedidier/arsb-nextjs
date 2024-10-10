@@ -11,7 +11,7 @@ export default function AdvertisersPage() {
     // Récupérer les données des annonceurs via l'API
     const fetchAdvertisers = async () => {
       try {
-        const response = await fetch('/api/advertisers');
+        const response = await fetch('/api/db/advertisers');
         const data = await response.json();
         setAdvertisers(data.advertisers);
       } catch (err) {

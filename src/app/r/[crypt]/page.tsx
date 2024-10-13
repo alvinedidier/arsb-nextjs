@@ -15,7 +15,10 @@ import { Eye, MousePointerClick, Percent, Play, Repeat, Users, Calendar, DollarS
 import { Skeleton } from '@/components/ui/skeleton';
 
 import CardCampaign from '@/components/ui/card-campaign';
-import { formatDate, calculateDaysBetween, calculateDaysFromEndToToday } from '@/components/utils/date';
+import { formatDate, calculateDaysBetween, calculateDaysFromEndToToday, resetTimeToMidnight } from '@/utils/date';
+
+import ReportRequest from '@/components/ReportRequest'; // Ajustez le chemin selon votre structure de projet
+import ReportWorkflowRequest from '@/components/ReportWorkflowRequest'; // Code un workflow pour le workflow reporting
 
 interface PageProps {
   params: {
@@ -28,7 +31,12 @@ export default function Page({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [screenshots, setScreenshots] = useState<File[]>([]); // Ajout des screenshots
-  
+
+  const [formattedDateStart, setFormattedDateStart] = useState<string | null>(null);
+  const [formattedDateEnd, setFormattedDateEnd] = useState<string | null>(null);
+  const [daysBetween, setDaysBetween] = useState<number | null>(null);
+  const [daysFromEndToToday, setDaysFromEndToToday] = useState<number | null>(null);
+
   useEffect(() => {
     const fetchCampaign = async () => {
       if (!params.crypt) {
@@ -50,7 +58,7 @@ export default function Page({ params }: PageProps) {
           return;
         }
 
-        const campaignData = await response.json(); 
+        const campaignData = await response.json();
 
         if (!campaignData.campaigns || !Array.isArray(campaignData.campaigns) || campaignData.campaigns.length === 0) {
           setError("Aucune campagne trouvée.");
@@ -59,6 +67,20 @@ export default function Page({ params }: PageProps) {
         }
 
         setCampaign(campaignData.campaigns[0]);
+
+        // Appel des fonctions asynchrones de formatage et calcul des dates
+        const start = resetTimeToMidnight(campaignData.campaigns[0].campaign_start_date);
+        const end = resetTimeToMidnight(campaignData.campaigns[0].campaign_end_date);
+
+        const formattedStart = await formatDate(start);
+        const formattedEnd = await formatDate(end);
+        const daysBtwn = await calculateDaysBetween(start, end);
+        const daysFromEnd = await calculateDaysFromEndToToday(end);
+
+        setFormattedDateStart(formattedStart);
+        setFormattedDateEnd(formattedEnd);
+        setDaysBetween(daysBtwn);
+        setDaysFromEndToToday(daysFromEnd);
       } catch (error) {
         setError(`Une erreur s'est produite lors de la récupération de la campagne : ${error}.`);
       } finally {
@@ -100,14 +122,31 @@ export default function Page({ params }: PageProps) {
     );
   }
 
-  // Utilisation des fonctions pour récupérer les dates
-  const formattedDateStart = formatDate(campaign.campaign_start_date);
-  const formattedDateEnd = formatDate(campaign.campaign_end_date);
-  const daysBetween = calculateDaysBetween(campaign.campaign_start_date, campaign.campaign_end_date);
-  const daysFromEndToToday = calculateDaysFromEndToToday(campaign.campaign_end_date);
-
+ /* <hr />
+        <ReportRequest 
+          startDate={campaign.campaign_start_date}
+          endDate={campaign.campaign_end_date}
+          campaignId={campaign.campaign_id}
+          method="vu"
+        />
+  */
   return (
     <>
+
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-4">Demande de Rapport</h1>
+        
+        <ReportRequest 
+          startDate={campaign.campaign_start_date}
+          endDate={campaign.campaign_end_date}
+          campaignId={campaign.campaign_id}
+          method="campaign"
+        />
+     
+      </div>
+
+      <hr />
+
       <div className="p-6 max-w-7xl mx-auto">
 
         <div className="flex justify-between items-center mb-6">
@@ -115,21 +154,18 @@ export default function Page({ params }: PageProps) {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 mb-6">
-          
           <CardCampaign
             title="Nom de l'annonceur"
             icon={Store}
             value={campaign.advertiser_name}
-            link={`/manage/advertisers/${campaign.advertiser_id}`}
           />
 
           <CardCampaign
             title="Période de diffusion"
             icon={Calendar}
-            value={`${formatDate(campaign.campaign_start_date)} - ${formatDate(campaign.campaign_end_date)}`}
+            value={`${formattedDateStart} - ${formattedDateEnd}`}
             description={`${daysBetween} jours`}
           />
-          
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-6">
@@ -167,7 +203,6 @@ export default function Page({ params }: PageProps) {
                     <TableCell>1%</TableCell>
                     <TableCell>95.5%</TableCell>
                   </TableRow>
-                  
                 </TableBody>
               </Table>
             </CardContent>

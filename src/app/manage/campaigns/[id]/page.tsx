@@ -35,7 +35,8 @@ import {
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 import CardCampaign from '@/components/ui/card-campaign';
-import { formatDate, calculateDaysBetween, calculateDaysFromEndToToday } from '@/components/utils/date';
+import { formatDate, calculateDaysBetween, calculateDaysFromEndToToday, resetTimeToMidnight } from '@/utils/date';
+
 import { DataTable, Campaign } from '@/components/DataTableCampaigns';
 
 // Importer le composant à afficher lorsque la campagne n'existe pas
@@ -73,6 +74,11 @@ export default function Page({ params }: PageProps) {
 
   const { toast } = useToast();
 
+  const [formattedDateStart, setFormattedDateStart] = useState<string | null>(null);
+  const [formattedDateEnd, setFormattedDateEnd] = useState<string | null>(null);
+  const [daysBetween, setDaysBetween] = useState<number | null>(null);
+  const [daysFromEndToToday, setDaysFromEndToToday] = useState<number | null>(null);
+
   useEffect(() => {
     const fetchCampaign = async () => {
       
@@ -90,7 +96,9 @@ export default function Page({ params }: PageProps) {
         const response = await fetch(`/api/db/campaigns?${queryParams}`, { next: { revalidate: 3600 } });
       
         if (!response.ok) {
-          setError(`Campagne non trouvée. - ${params.id}`);
+          setError(`Campagne non trouvée pour l'ID : ${params.crypt}`);
+          setLoading(false);
+          return;
         }
 
         const campaignData = await response.json(); 
@@ -102,7 +110,22 @@ export default function Page({ params }: PageProps) {
         }
 
         setCampaign(campaignData.campaigns[0]); // Assurez-vous de récupérer la première campagne
-     } catch (error) {
+        
+        // Appel des fonctions asynchrones de formatage et calcul des dates
+        const start = resetTimeToMidnight(campaignData.campaigns[0].campaign_start_date);
+        const end = resetTimeToMidnight(campaignData.campaigns[0].campaign_end_date);
+
+        const formattedStart = await formatDate(start);
+        const formattedEnd = await formatDate(end);
+        const daysBtwn = await calculateDaysBetween(start, end);
+        const daysFromEnd = await calculateDaysFromEndToToday(end);
+
+        setFormattedDateStart(formattedStart);
+        setFormattedDateEnd(formattedEnd);
+        setDaysBetween(daysBtwn);
+        setDaysFromEndToToday(daysFromEnd);
+     
+      } catch (error) {
         /*console.error('Erreur lors de la récupération de la campagne :', error);*/
         setError(`Une erreur s'est produite lors de la récupération de la campagne : ${error}.`);
       } finally {
@@ -142,27 +165,6 @@ export default function Page({ params }: PageProps) {
         </div>
       </div>
     );
-  }
-
-  // Utilisation des fonctions pour récupérer les dates
-  const formattedDateStart = formatDate(campaign.campaign_start_date);
-  const formattedDateEnd = formatDate(campaign.campaign_end_date);
-  const daysBetween = calculateDaysBetween(campaign.campaign_start_date, campaign.campaign_end_date);
-  const daysFromEndToToday = calculateDaysFromEndToToday(campaign.campaign_end_date);
-
-  function handleDelete() {
-    console.log('Function lol triggered');
-    // Fermez le dialogue ici
-    setIsDialogOpen(false);
-    alert('lol')
-    // Ajoutez votre logique de suppression ici
-    toast({
-      title: "Scheduled: Catch up ",
-      description: "Friday, February 10, 2023 at 5:57 PM",
-      action: (
-        <ToastAction altText="Goto schedule to undo">Undo</ToastAction>
-      ),
-    });
   }
 
   return (
@@ -209,22 +211,6 @@ export default function Page({ params }: PageProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Déplacez l'AlertDialog en dehors du DropdownMenu */}
-          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Supprimer le rapport</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Tu souhaites supprimer le rapport de campagne ?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-500 text-white" onClick={() => handleDelete()}>Supprimer</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
@@ -239,7 +225,7 @@ export default function Page({ params }: PageProps) {
           <CardCampaign
             title="Période de diffusion"
             icon={Calendar}
-            value={`${formatDate(campaign.campaign_start_date)} - ${formatDate(campaign.campaign_end_date)}`}
+            value={`${formattedDateStart} - ${formattedDateEnd}`}
             description={`${daysBetween} jours`}
           />
           <CardCampaign

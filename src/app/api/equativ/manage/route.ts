@@ -1,7 +1,6 @@
 // src/api/equativ/manage/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios';
 
 const apiUrlMap: { [key: string]: string | ((params: any) => string) } = {
   agencies: 'agencies/',
@@ -26,7 +25,7 @@ const apiUrlMap: { [key: string]: string | ((params: any) => string) } = {
   creatives: (params: any) => `insertions/${params?.insertion_id}/creatives`,
 };
 
-const buildApiUrl = (method: string, params: any) => {
+const buildApiUrl = (method: string, params: Record<string, any>): string | null => {
   const apiBaseUrl = 'https://manage.smartadserverapis.com/2044/';
   const endpoint = apiUrlMap[method];
 
@@ -36,12 +35,12 @@ const buildApiUrl = (method: string, params: any) => {
   return endpoint ? `${apiBaseUrl}${endpoint}` : null;
 };
 
-// Fonction handler GET exportée spécifiquement
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const method = searchParams.get('method');
-  const params: any = {};
+  const params: Record<string, any> = {};
 
+  // Extracting search parameters, except the 'method' parameter
   searchParams.forEach((value, key) => {
     if (key !== 'method') {
       params[key] = value;
@@ -49,7 +48,7 @@ export async function GET(req: NextRequest) {
   });
 
   try {
-    // Validate required parameter
+    // Validate that method is provided and is a string
     if (!method || typeof method !== 'string') {
       return NextResponse.json({ error: 'Invalid method provided.' }, { status: 400 });
     }
@@ -59,31 +58,39 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: `Unknown method: ${method}` }, { status: 400 });
     }
 
-    // Prepare Axios config
-    const config = {
+    // Prepare fetch configuration
+    const fetchConfig: RequestInit = {
       method: 'GET',
-      url: apiUrl,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
-      },
-      auth: {
-        username: process.env.NEXT_PUBLIC_SMART_LOG || '',
-        password: process.env.NEXT_PUBLIC_SMART_PASS || '',
-      },
-      params: {
-        ...(params.limit && { limit: params.limit }),
-        ...(params.offset && { offset: params.offset }),
-        ...(typeof params.isArchived === 'boolean' && { isArchived: params.isArchived }),
+        Authorization: `Basic ${btoa(`${process.env.NEXT_PUBLIC_SMARTADSERVER_LOGIN || ''}:${process.env.NEXT_PUBLIC_SMARTADSERVER_PASSWORD || ''}`)}`,
       },
     };
 
-    // Make request to external API
-    const response = await axios(config);
+    // Add query parameters to the API URL
+    const urlWithParams = new URL(apiUrl);
+    if (params.limit) urlWithParams.searchParams.append('limit', params.limit);
+    if (params.offset) urlWithParams.searchParams.append('offset', params.offset);
+    if (typeof params.isArchived === 'boolean') {
+      urlWithParams.searchParams.append('isArchived', params.isArchived.toString());
+    }
 
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error) {
+    // Make the request using fetch
+    const response = await fetch(urlWithParams.toString(), fetchConfig);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return NextResponse.json(data, { status: 200 });
+  } catch (error: any) {
     console.error('Erreur lors de la récupération des données:', error);
-    return NextResponse.json({ error: `Une erreur s'est produite lors de la récupération des données : ${error}.` }, { status: 500 });
+    return NextResponse.json(
+      { error: `Une erreur s'est produite lors de la récupération des données : ${error.message}` },
+      { status: 500 }
+    );
   }
 }

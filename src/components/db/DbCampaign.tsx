@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import Crypto from 'crypto';
 
-interface NotFoundComponentProps {
+interface DbCampaignProps {
   id: number;
   table: string;
 }
 
-const NotFoundComponent: React.FC<NotFoundComponentProps> = ({ id, table }) => {
+const DbCampaign: React.FC<DbCampaignProps> = ({ id, table }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any | null>(null);
@@ -33,13 +32,19 @@ const NotFoundComponent: React.FC<NotFoundComponentProps> = ({ id, table }) => {
 
   const getDataFromAPI = async (id: number, table: string) => {
     const method = table === 'campaign' ? 'campaign' : 'otherMethod';
-    const response = await axios.get(`/api/equativ/manage?method=${method}&campaign_id=${id}`);
-    return response.data;
+    const response = await fetch(`/api/equativ/manage?method=${method}&campaign_id=${id}`);
+    if (!response.ok) {
+      throw new Error(`Erreur lors de la récupération des données : ${response.statusText}`);
+    }
+    return await response.json();
   };
 
   const checkIfDataExists = async (campaignId: number) => {
     const queryParams = new URLSearchParams({ campaign_id: campaignId.toString() }).toString();
     const response = await fetch(`/api/db/campaigns?${queryParams}`);
+    if (!response.ok) {
+      throw new Error(`Erreur lors de la vérification des données : ${response.statusText}`);
+    }
     const result = await response.json();
     console.log('Nombre d\'occurrences : ', result.count);
     return result.count;
@@ -63,8 +68,18 @@ const NotFoundComponent: React.FC<NotFoundComponentProps> = ({ id, table }) => {
     try {
       const campaign_crypt = generateCampaignCrypt(data.id);
       const campaignToSave = mapDataForDB(data, campaign_crypt);
-      // return await axios.post('/api/db/campaigns', campaignToSave);
-      await axios.post('/api/db/campaigns', campaignToSave);
+      const response = await fetch('/api/db/campaigns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(campaignToSave),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur lors de l'enregistrement des données : ${response.statusText}`);
+      }
+
       window.location.reload();
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des données :", error);
@@ -74,8 +89,17 @@ const NotFoundComponent: React.FC<NotFoundComponentProps> = ({ id, table }) => {
 
   const updateData = async (data: any) => {
     try {
-      console.log("Update");
-      // await axios.put(`/api/updateCampaign/${data.campaign_id}`, data);
+      const response = await fetch(`/api/updateCampaign/${data.campaign_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur lors de la mise à jour des données : ${response.statusText}`);
+      }
     } catch (error) {
       console.error("Erreur lors de la mise à jour des données :", error);
       throw new Error("Échec de la mise à jour des données.");
@@ -126,4 +150,4 @@ const NotFoundComponent: React.FC<NotFoundComponentProps> = ({ id, table }) => {
   );
 };
 
-export default NotFoundComponent;
+export default DbCampaign;

@@ -18,9 +18,13 @@ export async function GET(request) {
     const createdAt = searchParams.get('created_at');
     const updatedAt = searchParams.get('updated_at');
 
-    // Ajouter une pagination pour limiter les résultats
-   // const limit = parseInt(searchParams.get('limit')) || 10; // Nombre de résultats par page
-   // const offset = parseInt(searchParams.get('offset')) || 0; // À ajuster selon la page demandée
+    // Récupérer les paramètres de tri (classement)
+    const orderBy = searchParams.get('order_by') || 'c.campaign_id'; // Colonne par défaut : campaign_id
+    const order = searchParams.get('order')?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC'; // Ordre par défaut : ASC
+
+    // Ajouter une pagination pour limiter les résultats (si nécessaire)
+    // const limit = parseInt(searchParams.get('limit')) || 10; // Nombre de résultats par page
+    // const offset = parseInt(searchParams.get('offset')) || 0; // À ajuster selon la page demandée
 
     // Construire la requête SQL pour récupérer les campagnes et les informations des annonceurs associées
     let query = `
@@ -79,20 +83,23 @@ export async function GET(request) {
       queryParams.push(updatedAt);
     }
 
-    // Ajouter la pagination
-    //query += ' LIMIT ? OFFSET ?';
-   // queryParams.push(limit, offset);
+    // Ajouter la partie classement (ORDER BY)
+    query += ` ORDER BY ${orderBy} ${order}`;
+
+    // Ajouter la pagination (si nécessaire)
+    // query += ' LIMIT ? OFFSET ?';
+    // queryParams.push(limit, offset);
 
     // Exécuter la requête SQL avec des paramètres préparés pour éviter les injections SQL
     const [rows] = await pool.query(query, queryParams);
 
     // Vérifier le format des données avant de les renvoyer
     if (!rows || rows.length === 0) {
-      return NextResponse.json({ count : 0, message: 'Aucune campagne trouvée' }, { status: 200 });
+      return NextResponse.json({ count: 0, message: 'Aucune campagne trouvée' }, { status: 200 });
     }
 
     // Retourner les résultats
-    return NextResponse.json({ count : rows.length, campaigns: rows });
+    return NextResponse.json({ count: rows.length, campaigns: rows });
   } catch (error) {
     console.error('Erreur lors de la récupération des campagnes :', error);
 
@@ -105,72 +112,4 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Erreur lors de la récupération des campagnes' }, { status: 500 });
     }
   }
-}
-
-export async function POST(request) {
-  // console.log('POST Campaigns : ')
-   try {
-    const body = await request.json();
-    const {
-      campaign_id,
-      campaign_name,
-      campaign_crypt,
-      advertiser_id,
-      agency_id,
-      campaign_start_date,
-      campaign_end_date,
-      campaign_status_id,
-      campaign_archived,
-      created_at,
-      updated_at
-    } = body;
-
-    // Construire la requête SQL pour insérer une nouvelle campagne
-    const query = `
-      INSERT INTO asb_campaigns (
-        campaign_id,
-        campaign_name,
-        campaign_crypt,
-        advertiser_id,
-        agency_id,
-        campaign_start_date,
-        campaign_end_date,
-        campaign_status_id,
-        campaign_archived,
-        created_at,
-        updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const queryParams = [
-      campaign_id,
-      campaign_name,
-      campaign_crypt,
-      advertiser_id,
-      agency_id,
-      campaign_start_date,
-      campaign_end_date,
-      campaign_status_id,
-      campaign_archived,
-      created_at,
-      updated_at
-    ];
-
-    // Exécuter la requête SQL avec des paramètres préparés pour éviter les injections SQL
-    await pool.query(query, queryParams);
-
-    // Retourner une réponse de succès
-    return NextResponse.json({ message: 'Campagne ajoutée avec succès' }, { status: 201 });
-  } catch (error) {
-    console.error('Erreur lors de l\'ajout de la campagne :', error);
-
-    // Retourner une réponse d'erreur plus détaillée
-    if (error.code === 'ER_ACCESS_DENIED_ERROR') {
-      return NextResponse.json({ error: 'Erreur de connexion à la base de données' }, { status: 500 });
-    } else if (error.code === 'ER_BAD_DB_ERROR') {
-      return NextResponse.json({ error: 'Base de données introuvable' }, { status: 500 });
-    } else {
-      return NextResponse.json({ error: 'Erreur lors de l\'ajout de la campagne' }, { status: 500 });
-    }
-  } 
 }

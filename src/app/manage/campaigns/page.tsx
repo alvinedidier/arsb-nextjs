@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { DataTable, Campaign } from '../../../components/DataTableCampaigns';
+import { DataTable, Campaign } from '@/components/DataTableCampaigns';
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -30,9 +30,7 @@ export default function CampaignsPage() {
 
       {error && <div className="text-red-500">{error}</div>}
 
-      {/* Utiliser le composant DataTable */
-       console.log(campaigns)
-      }
+      {/* Utiliser le composant DataTable */}
       <DataTable data={campaigns} />
     </div>
   );

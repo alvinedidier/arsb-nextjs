@@ -1,4 +1,3 @@
-// components/DataTableCampaigns.tsx
 "use client";
 
 import * as React from "react";
@@ -14,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -37,7 +36,7 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { isValidElement } from "react";
+import { formatDate } from '@/utils/date';
 
 export interface Campaign {
   campaign_id: number;
@@ -53,6 +52,35 @@ export interface Campaign {
   created_at: string;
   updated_at: string;
 }
+
+// Composant qui gère l'affichage d'une ligne de campagne avec les dates formatées
+const CampaignRow = ({ row }: { row: any }) => {
+  const [startDate, setStartDate] = React.useState<string | null>(null);
+  const [endDate, setEndDate] = React.useState<string | null>(null);
+
+  // Utilisation de useEffect pour formater les dates après le rendu
+  React.useEffect(() => {
+    const formattedStartDate = formatDate(row.original.campaign_start_date);
+    const formattedEndDate = formatDate(row.original.campaign_end_date);
+
+    setStartDate(formattedStartDate);
+    setEndDate(formattedEndDate);
+  }, [row.original.campaign_start_date, row.original.campaign_end_date]); // Met à jour si les dates changent
+
+  return (
+    <div className="text-blue-600">
+      <Link href={`/manage/campaigns/${row.getValue("campaign_id")}`} title={`${row.getValue("campaign_name")}`}>
+        <span className="hover:underline">{row.getValue("campaign_name")}</span>
+        <div className="text-xs text-gray-500">
+          {/* Affiche les dates formatées */}
+          {startDate && endDate && (
+            <>Du {startDate} au {endDate}</>
+          )}
+        </div>
+      </Link>
+    </div>
+  );
+};
 
 // Colonnes pour la table de campagnes
 export const columns: ColumnDef<Campaign>[] = [
@@ -86,27 +114,29 @@ export const columns: ColumnDef<Campaign>[] = [
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         <span className="font-bold">#</span>
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-2 size-4" aria-hidden="true"><path d="M4.93179 5.43179C4.75605 5.60753 4.75605 5.89245 4.93179 6.06819C5.10753 6.24392 5.39245 6.24392 5.56819 6.06819L7.49999 4.13638L9.43179 6.06819C9.60753 6.24392 9.89245 6.24392 10.0682 6.06819C10.2439 5.89245 10.2439 5.60753 10.0682 5.43179L7.81819 3.18179C7.73379 3.0974 7.61933 3.04999 7.49999 3.04999C7.38064 3.04999 7.26618 3.0974 7.18179 3.18179L4.93179 5.43179ZM10.0682 9.56819C10.2439 9.39245 10.2439 9.10753 10.0682 8.93179C9.89245 8.75606 9.60753 8.75606 9.43179 8.93179L7.49999 10.8636L5.56819 8.93179C5.39245 8.75606 5.10753 8.75606 4.93179 8.93179C4.75605 9.10753 4.75605 9.39245 4.93179 9.56819L7.18179 11.8182C7.35753 11.9939 7.64245 11.9939 7.81819 11.8182L10.0682 9.56819Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+        <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div><Link href={`/manage/campaigns/${row.getValue("campaign_id")}`} title={`${row.getValue("campaign_name")}`} className="hover:underline">{row.getValue("campaign_id")}</Link></div>,
+    cell: ({ row }) => (
+      <div>
+        <Link href={`/manage/campaigns/${row.getValue("campaign_id")}`} title={`${row.getValue("campaign_name")}`} className="hover:underline">
+          {row.getValue("campaign_id")}
+        </Link>
+      </div>
+    ),
   },
   {
     accessorKey: "advertiser_id",
     header: ({ column }) => (
-
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         <span className="font-bold">Annonceur</span>
-
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-2 size-4" aria-hidden="true"><path d="M4.93179 5.43179C4.75605 5.60753 4.75605 5.89245 4.93179 6.06819C5.10753 6.24392 5.39245 6.24392 5.56819 6.06819L7.49999 4.13638L9.43179 6.06819C9.60753 6.24392 9.89245 6.24392 10.0682 6.06819C10.2439 5.89245 10.2439 5.60753 10.0682 5.43179L7.81819 3.18179C7.73379 3.0974 7.61933 3.04999 7.49999 3.04999C7.38064 3.04999 7.26618 3.0974 7.18179 3.18179L4.93179 5.43179ZM10.0682 9.56819C10.2439 9.39245 10.2439 9.10753 10.0682 8.93179C9.89245 8.75606 9.60753 8.75606 9.43179 8.93179L7.49999 10.8636L5.56819 8.93179C5.39245 8.75606 5.10753 8.75606 4.93179 8.93179C4.75605 9.10753 4.75605 9.39245 4.93179 9.56819L7.18179 11.8182C7.35753 11.9939 7.64245 11.9939 7.81819 11.8182L10.0682 9.56819Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+        <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => {
-
-      // Log pour déboguer le contenu de la ligne
       const advertiserName = row.original.advertiser_name;
       const advertiserId = row.original.advertiser_id;
 
@@ -119,39 +149,25 @@ export const columns: ColumnDef<Campaign>[] = [
       );
     },
   },
-
   {
     accessorKey: "campaign_name",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         <span className="font-bold">Nom</span> 
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-2 size-4" aria-hidden="true"><path d="M4.93179 5.43179C4.75605 5.60753 4.75605 5.89245 4.93179 6.06819C5.10753 6.24392 5.39245 6.24392 5.56819 6.06819L7.49999 4.13638L9.43179 6.06819C9.60753 6.24392 9.89245 6.24392 10.0682 6.06819C10.2439 5.89245 10.2439 5.60753 10.0682 5.43179L7.81819 3.18179C7.73379 3.0974 7.61933 3.04999 7.49999 3.04999C7.38064 3.04999 7.26618 3.0974 7.18179 3.18179L4.93179 5.43179ZM10.0682 9.56819C10.2439 9.39245 10.2439 9.10753 10.0682 8.93179C9.89245 8.75606 9.60753 8.75606 9.43179 8.93179L7.49999 10.8636L5.56819 8.93179C5.39245 8.75606 5.10753 8.75606 4.93179 8.93179C4.75605 9.10753 4.75605 9.39245 4.93179 9.56819L7.18179 11.8182C7.35753 11.9939 7.64245 11.9939 7.81819 11.8182L10.0682 9.56819Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+        <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => {
-      const startDate = row.original.campaign_start_date;
-      const endDate = row.original.campaign_end_date;
-
-      return (
-        <div className="text-blue-600">
-          <Link href={`/manage/campaigns/${row.getValue("campaign_id")}`} title={`${row.getValue("campaign_name")}`}>
-            <span className="hover:underline">{row.getValue("campaign_name")}</span>
-
-            <div className="text-xs text-gray-500">
-              (Du {startDate} au {endDate})
-            </div>
-          </Link>
-        </div>
-      );
-    },
+    cell: ({ row }) => (
+      // Utilisation de CampaignRow pour afficher les détails de la campagne
+      <CampaignRow row={row} />
+    ),
   },
-
   {
     accessorKey: "updated_at",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        <span className="font-bold">Dernière MAJ</span> 
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-2 size-4" aria-hidden="true"><path d="M4.93179 5.43179C4.75605 5.60753 4.75605 5.89245 4.93179 6.06819C5.10753 6.24392 5.39245 6.24392 5.56819 6.06819L7.49999 4.13638L9.43179 6.06819C9.60753 6.24392 9.89245 6.24392 10.0682 6.06819C10.2439 5.89245 10.2439 5.60753 10.0682 5.43179L7.81819 3.18179C7.73379 3.0974 7.61933 3.04999 7.49999 3.04999C7.38064 3.04999 7.26618 3.0974 7.18179 3.18179L4.93179 5.43179ZM10.0682 9.56819C10.2439 9.39245 10.2439 9.10753 10.0682 8.93179C9.89245 8.75606 9.60753 8.75606 9.43179 8.93179L7.49999 10.8636L5.56819 8.93179C5.39245 8.75606 5.10753 8.75606 4.93179 8.93179C4.75605 9.10753 4.75605 9.39245 4.93179 9.56819L7.18179 11.8182C7.35753 11.9939 7.64245 11.9939 7.81819 11.8182L10.0682 9.56819Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+        <span className="font-bold">Dernière MAJ</span>
+        <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => (
@@ -162,7 +178,7 @@ export const columns: ColumnDef<Campaign>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-
+      const campaign = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -190,18 +206,14 @@ export const columns: ColumnDef<Campaign>[] = [
 export function DataTable({ data }: { data: Campaign[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState<string>("");
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
 
   // Ajout de useEffect pour surveiller les données
   React.useEffect(() => {
     console.log("Données du tableau mises à jour :", data);
-  }, [data]);  // Cela se déclenchera chaque fois que 'data' changera.
-
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  }, [data]);  // Se déclenche chaque fois que 'data' change.
 
   const table = useReactTable({
     data,
@@ -231,43 +243,36 @@ export function DataTable({ data }: { data: Campaign[] }) {
         row.original.advertiser_name.toLowerCase().includes(searchValue)
       );
     },
-    // Configuration de la pagination
-    initialState: { pagination: { pageSize: 100 } },  // Fixe la pagination à 100 éléments par page
-
+    initialState: { pagination: { pageSize: 100 } },  // Pagination fixée à 100 éléments par page
   });
 
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
-         {/* Champ de recherche global */}
-         <Input
+        {/* Champ de recherche global */}
+        <Input
           placeholder="Rechercher par ID, nom de campagne ou annonceur..."
           value={globalFilter ?? ""}
           onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2 size-4"><path d="M9 2H6V13H9V2ZM10 2V13H12.5C12.7761 13 13 12.7761 13 12.5V2.5C13 2.22386 12.7761 2 12.5 2H10ZM2.5 2H5V13H2.5C2.22386 13 2 12.7761 2 12.5V2.5C2 2.22386 2.22386 2 2.5 2ZM2.5 1C1.67157 1 1 1.67157 1 2.5V12.5C1 13.3284 1.67157 14 2.5 14H12.5C13.3284 14 14 13.3284 14 12.5V2.5C14 1.67157 13.3284 1 12.5 1H2.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+              <ArrowUpDown className="mr-2 h-4 w-4" />
               Colonnes
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                >
-                   {/* Utilisation de extractSpanText pour obtenir le texte dans <span> */}
-                  {column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
+            {table.getAllColumns().filter((column) => column.getCanHide()).map((column) => (
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+              >
+                {column.id}
+              </DropdownMenuCheckboxItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -280,10 +285,7 @@ export function DataTable({ data }: { data: Campaign[] }) {
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -292,16 +294,10 @@ export function DataTable({ data }: { data: Campaign[] }) {
           <TableBody>
             {table.getRowModel()?.rows && table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -309,7 +305,7 @@ export function DataTable({ data }: { data: Campaign[] }) {
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Pas de résultats.
+                  Aucune campagne.
                 </TableCell>
               </TableRow>
             )}

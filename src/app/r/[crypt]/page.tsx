@@ -72,15 +72,16 @@ export default function Page({ params }: PageProps) {
         const start = resetTimeToMidnight(campaignData.campaigns[0].campaign_start_date);
         const end = resetTimeToMidnight(campaignData.campaigns[0].campaign_end_date);
 
-        const formattedStart = await formatDate(start);
-        const formattedEnd = await formatDate(end);
-        const daysBtwn = await calculateDaysBetween(start, end);
-        const daysFromEnd = await calculateDaysFromEndToToday(end);
+        const formattedStart = formatDate(start);
+        const formattedEnd = formatDate(end);
+        const daysBtwn = calculateDaysBetween(start, end);
+        const daysFromEnd = calculateDaysFromEndToToday(end);
 
         setFormattedDateStart(formattedStart);
         setFormattedDateEnd(formattedEnd);
         setDaysBetween(daysBtwn);
         setDaysFromEndToToday(daysFromEnd);
+
       } catch (error) {
         setError(`Une erreur s'est produite lors de la récupération de la campagne : ${error}.`);
       } finally {
@@ -122,7 +123,14 @@ export default function Page({ params }: PageProps) {
     );
   }
 
- /* <hr />
+  /*
+<ReportRequest 
+          startDate={campaign.campaign_start_date}
+          endDate={campaign.campaign_end_date}
+          campaignId={campaign.campaign_id}
+          method="campaign"
+        />
+
         <ReportRequest 
           startDate={campaign.campaign_start_date}
           endDate={campaign.campaign_end_date}
@@ -130,19 +138,18 @@ export default function Page({ params }: PageProps) {
           method="vu"
         />
   */
+
   return (
     <>
 
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-4">Demande de Rapport</h1>
-        
-        <ReportRequest 
+        <ReportWorkflowRequest 
           startDate={campaign.campaign_start_date}
           endDate={campaign.campaign_end_date}
           campaignId={campaign.campaign_id}
-          method="campaign"
         />
-     
+
       </div>
 
       <hr />

@@ -210,10 +210,12 @@ export function DataTable({ data }: { data: Campaign[] }) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+/*
   // Ajout de useEffect pour surveiller les données
   React.useEffect(() => {
     console.log("Données du tableau mises à jour :", data);
   }, [data]);  // Se déclenche chaque fois que 'data' change.
+*/
 
   const table = useReactTable({
     data,

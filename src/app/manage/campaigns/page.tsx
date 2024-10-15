@@ -11,9 +11,8 @@ export default function CampaignsPage() {
     // Récupérer les données des campagnes via l'API
     const fetchCampaigns = async () => {
       try {
-        const response = await fetch('/api/db/campaigns', { next: { revalidate: 3600 } });
+        const response = await fetch('/api/db/campaigns?orderby=campaign_id&order=DESC', { next: { revalidate: 3600 } });
         const data = await response.json();
-        console.log('Campaigns : ', data);
         setCampaigns(data.campaigns);
       } catch (err) {
         setError('Erreur lors de la récupération des campagnes');

@@ -33,8 +33,7 @@ export async function GET(request) {
         a.advertiser_name
       FROM asb_campaigns c
       INNER JOIN asb_advertisers a ON c.advertiser_id = a.advertiser_id
-      WHERE 1=1
-    `;
+    `; //  WHERE 1=1
 
     // Ajouter des filtres selon les paramètres fournis
     const queryParams = [];
@@ -89,6 +88,8 @@ export async function GET(request) {
     // Ajouter la pagination (si nécessaire)
     // query += ' LIMIT ? OFFSET ?';
     // queryParams.push(limit, offset);
+
+    // console.log(query)
 
     // Exécuter la requête SQL avec des paramètres préparés pour éviter les injections SQL
     const [rows] = await pool.query(query, queryParams);

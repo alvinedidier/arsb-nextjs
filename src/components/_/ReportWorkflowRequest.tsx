@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '@/utils/apiUrlBuilder';
 
 interface ReportingWorkflowProps {
   startDate: string;
@@ -40,11 +41,12 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
 
   const fetchReportId = async () => {
     try {
-      console.log(`ReporBody : ${JSON.stringify(createRequestCampaign(startDate, endDate, campaignId))}`)
+      const reportApiUrl = buildApiUrl('report', { campaignId });
 
-      const response = await fetch("https://supply-api.eqtv.io/insights/report-async/", {
+      const response = await fetch(reportApiUrl, {
         method: 'POST',
         headers: {
+          'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json',
           Authorization: `Basic ${btoa(`${process.env.NEXT_PUBLIC_SMARTADSERVER_LOGIN}:${process.env.NEXT_PUBLIC_SMARTADSERVER_PASSWORD}`)}`,
         },
@@ -97,31 +99,32 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
 
   const fetchCsvData = async (instanceId: string) => {
     try {
-      const response = await fetch("/api/equativ/csv", {
-        method: 'POST',
-        body: JSON.stringify(instanceId),
+      console.log('Fetch instanceId : ', instanceId);
+      const response = await fetch(instanceId, {
+        method: 'GET',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+          Authorization: `Basic ${btoa(`${process.env.NEXT_PUBLIC_SMARTADSERVER_LOGIN}:${process.env.NEXT_PUBLIC_SMARTADSERVER_PASSWORD}`)}`,
+        },
       });
 
-     /* if (!response.ok) {
-        throw new Error('Erreur lors de la récupération du fichier CSV data');
-      }*/
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération du fichier CSV');
+      }
 
       const csvText = await response.text();
       setCsvData(csvText);
-      setLoadingMessage('Fichier CSV récupéré avec succès');
-    } catch (error: any) {
+      setLoadingMessage('Fichier CSV récupéré avec succès : ' + instanceId);
+    } catch (error) {
       console.error(error);
       setError('Erreur lors de la récupération du fichier CSV');
     }
   };
-  
+
   useEffect(() => {
     if (!reportId) {
-     fetchReportId();
-
-    //  const instanceId = "https://storage.googleapis.com/bkt-dwh-read-reporting-prod-eu-reporting_output/2024/10/14/result_04be46f7-d6b2-4f64-97b8-a67657caf058.csv?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=webapi%40fs-async-reporting-prod.iam.gserviceaccount.com%2F20241014%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20241014T193105Z&X-Goog-Expires=172800&X-Goog-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22Report%202024-10-14T19%3A30%3A36.548Z.csv%22&response-content-type=text%2Fcsv&X-Goog-Signature=81d00527b981244124205e478e34f190cb0e75daa826820dba8e8fdd4990497e2be8296376b3a93352341704f39bd2a59ab7f8b6aebd5b192eb98dcca66e26b45d38dd35ecaac8fe217133f3a120c6468ef4badef7a2005da18e2de59432db58058fb0f559a2c252b7b83245445562ba58eb477430318c83ee6d77d32cca5445b4ec3093b26008e7a43cf7f4707a34f67c58511bc88228520ab1cfb3a064cc6291e80093a8f76cd069d753a551885c8e71557696e9bbaf72b7adec18b26f9f5467f73721037aca17644434f3feeba4e6ea34c347ee90405c67fcd7cb7d10e1eb0a2f4e39064b5f1dde87073750d6497028cc610c0e468319a372f8cb0546ad49";
-    //  fetchCsvData(instanceId);
-    
+      fetchReportId();
     }
   }, [startDate, endDate, campaignId]);
 

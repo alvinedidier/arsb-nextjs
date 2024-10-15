@@ -8,6 +8,12 @@ export const formatDate = (dateString: string): string => {
   return format(date, 'dd/MM/yyyy');
 };
 
+// Formater la date au format YYYY-MM-DD-hh (Date actuelle si aucun argument fourni)
+export const formatDateCache = (dateString?: string): string => {
+  const date = dateString ? parseISO(dateString) : new Date(); // Si dateString est vide, utiliser la date actuelle
+  return format(date, 'yyyyMMddHH'); // Noter 'HH' pour l'heure (format 24h)
+};
+
 // Calculer le nombre de jours entre deux dates
 export const calculateDaysBetween = (start: string, end: string): number => {
   const startParsed = parseISO(start);

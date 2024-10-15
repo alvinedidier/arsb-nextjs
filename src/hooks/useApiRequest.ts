@@ -1,4 +1,5 @@
 // hooks/useApiRequest.ts
+'use client';
 import { useState, useEffect } from 'react';
 
 export const useApiRequest = (url: string, options: RequestInit) => {

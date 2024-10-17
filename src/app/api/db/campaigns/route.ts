@@ -24,8 +24,11 @@ export async function GET(request: NextRequest) {
     const order = searchParams.get('order')?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC'; // Ordre par défaut : ASC
 
     // Ajouter une pagination pour limiter les résultats (si nécessaire)
-     const limit = parseInt(searchParams.get('limit') ?? '10', 10);
-     const offset = parseInt(searchParams.get('offset') ?? '0', 10);
+    const limitParam = searchParams.get('limit');
+    const offsetParam = searchParams.get('offset');
+    
+    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+    const offset = offsetParam ? parseInt(offsetParam, 10) : undefined;
 
     // Construire la requête SQL pour récupérer les campagnes et les informations des annonceurs associées
     let query = `

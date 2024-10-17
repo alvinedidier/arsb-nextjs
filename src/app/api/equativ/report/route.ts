@@ -1,3 +1,4 @@
+// api/equativ/report/route.ts
 import { NextResponse } from 'next/server';
 import NodeCache from 'node-cache';
 import { useApiRequest } from '@/hooks/useApiRequest';

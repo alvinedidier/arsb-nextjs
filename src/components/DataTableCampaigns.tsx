@@ -13,9 +13,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Eye, MousePointerClick, Percent, Play, Repeat, Users, Calendar, DollarSign, Store, Settings, Edit, ExternalLink, FileText, Trash2, Recycle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -153,7 +154,7 @@ export const columns: ColumnDef<Campaign>[] = [
     accessorKey: "campaign_name",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        <span className="font-bold">Nom</span> 
+        <span className="font-bold">Nom</span>
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -187,17 +188,56 @@ export const columns: ColumnDef<Campaign>[] = [
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(String(campaign.campaign_id))}
-            >
-              Copier l'ID de la campagne
+          <DropdownMenuContent className="w-60">
+            <DropdownMenuItem>
+              <Edit className="mr-2 h-4 w-4" />
+              <span>Mettre à jour</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Voir détails de la campagne</DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href={`https://manage.smartadserver.com/n/campaign/${campaign.campaign_id}/insertion`} target="_blank" className="flex items-center">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                <span>Aller sur SmartAdServer</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>
+              <span>Rapport</span>
+            </DropdownMenuLabel>
+            <DropdownMenuItem>
+              <Link href={`/r/${campaign.campaign_crypt}`} className="flex items-center">
+                <FileText className="mr-2 h-4 w-4" />
+                <span>Générer</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-black hover:text-white text-red-600 cursor-pointer"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Recycle className="mr-2 h-4 w-4" />
+              <span>Supprimer</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        /* <DropdownMenu>
+           <DropdownMenuTrigger asChild>
+             <Button variant="ghost" className="h-8 w-8 p-0">
+               <span className="sr-only">Ouvrir le menu</span>
+               <MoreHorizontal className="h-4 w-4" />
+             </Button>
+           </DropdownMenuTrigger>
+           <DropdownMenuContent align="end">
+             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+             <DropdownMenuItem
+               onClick={() => navigator.clipboard.writeText(String(campaign.campaign_id))}
+             >
+               Copier l'ID de la campagne
+             </DropdownMenuItem>
+             <DropdownMenuSeparator />
+             <DropdownMenuItem>Voir détails de la campagne</DropdownMenuItem>
+           </DropdownMenuContent>
+         </DropdownMenu>*/
       );
     },
   },
@@ -210,12 +250,12 @@ export function DataTable({ data }: { data: Campaign[] }) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-/*
-  // Ajout de useEffect pour surveiller les données
-  React.useEffect(() => {
-    console.log("Données du tableau mises à jour :", data);
-  }, [data]);  // Se déclenche chaque fois que 'data' change.
-*/
+  /*
+    // Ajout de useEffect pour surveiller les données
+    React.useEffect(() => {
+      console.log("Données du tableau mises à jour :", data);
+    }, [data]);  // Se déclenche chaque fois que 'data' change.
+  */
 
   const table = useReactTable({
     data,

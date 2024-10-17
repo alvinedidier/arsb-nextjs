@@ -1,6 +1,7 @@
 // @/utils/date.ts
 
 import { differenceInDays, format, parseISO } from 'date-fns';
+import path from 'path';
 
 // Formater la date au format DD/MM/YYYY
 export const formatDate = (dateString: string): string => {
@@ -57,3 +58,13 @@ export const dateUtils = (startDate: string, endDate: string) => {
     throw new Error(`Erreur lors de la manipulation des dates: ${error.message}`);
   }
 };
+
+// Fonction utilitaire pour obtenir la date actuelle formatée
+export function getCurrentDateComponents() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // mois commence à 0, donc +1
+  const day = String(now.getDate()).padStart(2, '0');
+  const hour = String(now.getHours()).padStart(2, '0');
+  return { year, month, day, hour };
+}

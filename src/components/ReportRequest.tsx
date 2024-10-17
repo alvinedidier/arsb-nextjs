@@ -58,7 +58,7 @@ const ReportRequest: React.FC<ReportRequestProps> = ({ startDate, endDate, campa
   */
 
   console.log('CachedData : ', cachedData);
-return cachedData;  
+  return cachedData;
 };
 
 export default ReportRequest;

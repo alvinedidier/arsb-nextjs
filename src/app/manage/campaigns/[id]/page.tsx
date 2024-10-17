@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Eye, MousePointerClick, Percent, Play, Repeat, Users, Calendar, DollarSign, Store, Settings, Edit, ExternalLink, FileText, Trash2 } from 'lucide-react';
+import { Eye, MousePointerClick, Percent, Play, Repeat, Users, Calendar, DollarSign, Store, Settings, Edit, ExternalLink, FileText, Trash2, Recycle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { useToast } from "@/components/ui/hooks/use-toast"
@@ -41,6 +41,7 @@ import { DataTable, Campaign } from '@/components/DataTableCampaigns';
 
 // Importer le composant à afficher lorsque la campagne n'existe pas
 import DbCampaign from "@/components/db/DbCampaign"; // Assurez-vous d'importer votre composant
+import { getTokenFromCookies } from '@/utils/auth';
 
 interface PageProps {
   params: {
@@ -81,36 +82,36 @@ export default function Page({ params }: PageProps) {
 
   useEffect(() => {
     const fetchCampaign = async () => {
-      
+
       if (!params.id || isNaN(Number(params.id))) {
         setError("L'identifiant de la campagne est invalide.");
         setLoading(false);
         return;
       }
 
-       try {
+      try {
         const queryParams = new URLSearchParams({
           campaign_id: params.id.toString()
         }).toString();
 
         const response = await fetch(`/api/db/campaigns?${queryParams}`, { next: { revalidate: 3600 } });
-      
+
         if (!response.ok) {
           setError(`Campagne non trouvée pour l'ID : ${params.crypt}`);
           setLoading(false);
           return;
         }
 
-        const campaignData = await response.json(); 
+        const campaignData = await response.json();
 
         // Vérifiez si des campagnes ont été trouvées
         if (!campaignData.campaigns || !Array.isArray(campaignData.campaigns) || campaignData.campaigns.length === 0) {
           setError("Aucune campagne trouvée."); // Vous pouvez garder cette ligne si vous souhaitez gérer l'état d'erreur
-         // return <NotFoundComponent />; // Retournez le composant NotFoundComponent
+          // return <NotFoundComponent />; // Retournez le composant NotFoundComponent
         }
 
         setCampaign(campaignData.campaigns[0]); // Assurez-vous de récupérer la première campagne
-        
+
         // Appel des fonctions asynchrones de formatage et calcul des dates
         const start = resetTimeToMidnight(campaignData.campaigns[0].campaign_start_date);
         const end = resetTimeToMidnight(campaignData.campaigns[0].campaign_end_date);
@@ -124,7 +125,7 @@ export default function Page({ params }: PageProps) {
         setFormattedDateEnd(formattedEnd);
         setDaysBetween(daysBtwn);
         setDaysFromEndToToday(daysFromEnd);
-     
+
       } catch (error) {
         /*console.error('Erreur lors de la récupération de la campagne :', error);*/
         setError(`Une erreur s'est produite lors de la récupération de la campagne : ${error}.`);
@@ -153,7 +154,7 @@ export default function Page({ params }: PageProps) {
 
   if (!campaign) {
     // Charge les données de la campagne si elle n'existe pas
-    return <DbCampaign table="campaign" id={params.id}/>;
+    return <DbCampaign table="campaign" id={params.id} />;
   }
 
   if (error) {
@@ -206,7 +207,7 @@ export default function Page({ params }: PageProps) {
                 className="hover:bg-black hover:text-white text-red-600 cursor-pointer"
                 onClick={() => setIsDialogOpen(true)}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Recycle className="mr-2 h-4 w-4" />
                 <span>Supprimer</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -214,7 +215,7 @@ export default function Page({ params }: PageProps) {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
-          
+
           <CardCampaign
             title="Nom de l'annonceur"
             icon={Store}

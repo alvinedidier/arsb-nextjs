@@ -149,34 +149,6 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
     }
   };
 
-  const fetchReportIdVU = async () => {
-    try {
-     // console.log(`ReportBody : ${JSON.stringify(createRequestCampaign(startDate, endDate, campaignId))}`)
-
-      const responseCampaign = await fetch("https://supply-api.eqtv.io/insights/report-async/", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Basic ${btoa(`${process.env.NEXT_PUBLIC_SMARTADSERVER_LOGIN}:${process.env.NEXT_PUBLIC_SMARTADSERVER_PASSWORD}`)}`,
-        },
-        body: JSON.stringify(createRequestCampaignVU(startDate, endDate, campaignId)),
-      });
-
-      const reportCampaignData = await responseCampaign.json();
-     // console.log('reportData :' + JSON.stringify(reportCampaignData));
-
-      if (reportCampaignData) {
-        setReportIdVU(reportCampaignData);
-        setLoadingMessage('Préparation des données de la campagne en cours...');
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (error) {
-      console.error(error);
-      setError('Erreur lors de la création du reporting');
-    }
-  };
-
   const fetchCsvDownload = async (csvData: string) => {
     try {
    
@@ -203,35 +175,6 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
     }
   };
 
-  const fetchReportDetailsVU = async () => {
-    if (!reportId) return;
-
-    try {
-      const response = await fetch(`https://supply-api.eqtv.io/insights/report-async/${reportId}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Basic ${btoa(`${process.env.NEXT_PUBLIC_SMARTADSERVER_LOGIN}:${process.env.NEXT_PUBLIC_SMARTADSERVER_PASSWORD}`)}`,
-        },
-      });
-
-      const reportDetails = await response.json();
-      console.log('reportDetails:', reportDetails);
-
-      const instanceId = reportDetails.instanceId;
-
-      if (instanceId) {
-        setLoadingMessage(`Téléchargement du fichier CSV pour l'instance ID : ${instanceId}...`);
-        fetchCsvData(instanceId);
-      } else {
-        setLoadingMessage('Merci de votre patience. La récupération est en cours...');
-        setTimeout(fetchReportDetails, 20000);
-      }
-    } catch (error) {
-      console.error(error);
-      setError('Erreur lors de la récupération des détails du reporting');
-    }
-  };
-
   useEffect(() => {
     if (!reportId) {
      fetchReportId();
@@ -241,18 +184,6 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
   useEffect(() => {
     if (reportId) {
       fetchReportDetails();
-    }
-  }, [reportId]);
-
-   useEffect(() => {
-    if (!reportIdVU) {
-     fetchReportIdVU();
-    }
-  }, [startDate, endDate, campaignId]);
-
-  useEffect(() => {
-    if (reportIdVU) {
-      fetchReportDetailsVU();
     }
   }, [reportId]);
 

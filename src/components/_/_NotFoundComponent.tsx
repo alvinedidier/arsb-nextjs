@@ -113,7 +113,7 @@ const NotFoundComponent: React.FC<NotFoundComponentProps> = ({ id, table }) => {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
         <strong className="font-bold">Aucune donnée trouvée.</strong>
-        <p className="mt-2">Les données de la table '{table}' (ID: {id}) ont été récupérées et traitées.</p>
+        <p className="mt-2">Les données de la table `{table}` (ID: {id}) ont été récupérées et traitées.</p>
       </div>
     </div>
   );

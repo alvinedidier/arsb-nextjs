@@ -1,19 +1,20 @@
 // src\components\ReportWorkflowRequest.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface ReportingWorkflowProps {
   startDate: string;
   endDate: string;
-  campaignId: string;
+  campaignId: number;
 }
 
 const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDate, campaignId }) => {
   const [reportId, setReportId] = useState<string | null>(null);
+  const [reportIdVU, setReportIdVU] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>('Chargement du rapport...');
   const [csvData, setCsvData] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const createRequestCampaign = (startDate: string, endDate: string, campaignId: string) => ({
+  const createRequestCampaign = (startDate: string, endDate: string, campaignId: number) => ({
     startDate,
     endDate,
     metrics: [
@@ -39,7 +40,7 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
     reportName: `Report Campaign ${campaignId} - Date ${new Date().toISOString()}`,
   });
 
-  const createRequestCampaignVU = (startDate: string, endDate: string, campaignId: string) => ({
+  const createRequestCampaignVU = (startDate: string, endDate: string, campaignId: number) => ({
     startDate,
     endDate,
     metrics: [
@@ -90,9 +91,9 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
     }
   };
 
-  const fetchReportDetails = async () => {
+  const fetchReportDetails = useCallback(async () => {
     if (!reportId) return;
-
+  
     try {
       const response = await fetch(`https://supply-api.eqtv.io/insights/report-async/${reportId}`, {
         method: 'GET',
@@ -100,15 +101,15 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
           Authorization: `Basic ${btoa(`${process.env.NEXT_PUBLIC_SMARTADSERVER_LOGIN}:${process.env.NEXT_PUBLIC_SMARTADSERVER_PASSWORD}`)}`,
         },
       });
-
+  
       const reportDetails = await response.json();
       console.log('reportDetails:', reportDetails);
-
+  
       const instanceId = reportDetails.instanceId;
-
+  
       if (instanceId) {
         setLoadingMessage(`Téléchargement du fichier CSV pour l'instance ID : ${instanceId}...`);
-        fetchCsvData(instanceId);
+        fetchCsvData(instanceId); // Ici, fetchCsvData est appelé mais n'est pas une dépendance
       } else {
         setLoadingMessage('Merci de votre patience. La récupération est en cours...');
         setTimeout(fetchReportDetails, 20000);
@@ -117,7 +118,7 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
       console.error(error);
       setError('Erreur lors de la récupération des détails du reporting');
     }
-  };
+  }, [reportId]); // La fonction fetchCsvData devrait être dans les dépendances
 
   const fetchCsvData = async (instanceId: string) => {
     try {
@@ -149,7 +150,7 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
     }
   };
 
-  const fetchReportIdVU = async () => {
+  const fetchReportIdVU = useCallback(async () => {
     try {
      // console.log(`ReportBody : ${JSON.stringify(createRequestCampaign(startDate, endDate, campaignId))}`)
 
@@ -175,7 +176,7 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
       console.error(error);
       setError('Erreur lors de la création du reporting');
     }
-  };
+  }, [startDate, endDate, campaignId]);
 
   const fetchCsvDownload = async (csvData: string) => {
     try {
@@ -236,25 +237,25 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
     if (!reportId) {
      fetchReportId();
     }
-  }, [startDate, endDate, campaignId]);
+  }, [startDate, fetchReportId]);
 
   useEffect(() => {
     if (reportId) {
       fetchReportDetails();
     }
-  }, [reportId]);
+  }, [reportId,fetchReportDetails]);
 
    useEffect(() => {
     if (!reportIdVU) {
      fetchReportIdVU();
     }
-  }, [startDate, endDate, campaignId]);
+  }, [reportIdVU,fetchReportIdVU]);
 
   useEffect(() => {
     if (reportIdVU) {
       fetchReportDetailsVU();
     }
-  }, [reportId]);
+  }, [reportIdVU,fetchReportDetailsVU]);
 
   return (
     <div>

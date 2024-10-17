@@ -17,8 +17,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import CardCampaign from '@/components/ui/card-campaign';
 import { formatDate, calculateDaysBetween, calculateDaysFromEndToToday, resetTimeToMidnight } from '@/utils/date';
 
-import ReportRequest from '@/components/ReportRequest'; // Ajustez le chemin selon votre structure de projet
-import ReportWorkflowRequest from '@/components/ReportWorkflowRequest'; // Code un workflow pour le workflow reporting
+import ReportRequest from '@/components/ReportRequest';
+import ReportWorkflowRequest from '@/components/ReportWorkflowRequest';
 
 interface PageProps {
   params: {
@@ -26,11 +26,21 @@ interface PageProps {
   };
 }
 
+// Définition de l'interface Campaign
+interface Campaign {
+  campaign_id: number;
+  campaign_name: string;
+  advertiser_name: string;
+  advertiser_id: number;
+  campaign_start_date: string;
+  campaign_end_date: string;
+}
+
 export default function Page({ params }: PageProps) {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [screenshots, setScreenshots] = useState<File[]>([]); // Ajout des screenshots
+  const [screenshots, setScreenshots] = useState<File[]>([]);
 
   const [formattedDateStart, setFormattedDateStart] = useState<string | null>(null);
   const [formattedDateEnd, setFormattedDateEnd] = useState<string | null>(null);
@@ -68,7 +78,6 @@ export default function Page({ params }: PageProps) {
 
         setCampaign(campaignData.campaigns[0]);
 
-        // Appel des fonctions asynchrones de formatage et calcul des dates
         const start = resetTimeToMidnight(campaignData.campaigns[0].campaign_start_date);
         const end = resetTimeToMidnight(campaignData.campaigns[0].campaign_end_date);
 
@@ -94,7 +103,7 @@ export default function Page({ params }: PageProps) {
 
   const handleScreenshotUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      setScreenshots(Array.from(event.target.files)); // Met à jour le tableau des captures d'écran
+      setScreenshots(Array.from(event.target.files)); 
     }
   };
 
@@ -123,25 +132,8 @@ export default function Page({ params }: PageProps) {
     );
   }
 
-  /*
-<ReportRequest 
-          startDate={campaign.campaign_start_date}
-          endDate={campaign.campaign_end_date}
-          campaignId={campaign.campaign_id}
-          method="campaign"
-        />
-
-        <ReportRequest 
-          startDate={campaign.campaign_start_date}
-          endDate={campaign.campaign_end_date}
-          campaignId={campaign.campaign_id}
-          method="vu"
-        />
-  */
-
   return (
     <>
-
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-4">Demande de Rapport</h1>
         <ReportWorkflowRequest 
@@ -149,13 +141,11 @@ export default function Page({ params }: PageProps) {
           endDate={campaign.campaign_end_date}
           campaignId={campaign.campaign_id}
         />
-
       </div>
 
       <hr />
 
       <div className="p-6 max-w-7xl mx-auto">
-
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold mb-6">{campaign.campaign_name}</h1>
         </div>
@@ -184,7 +174,7 @@ export default function Page({ params }: PageProps) {
           <CardCampaign title="Répétition" icon={Repeat} value="3.5" description="-2.8% vs dernière campagne" />
         </div>
 
-        <div className="grid gap-6  mb-6">
+        <div className="grid gap-6 mb-6">
           <Card>
             <CardHeader>
               <CardTitle>Sites web</CardTitle>
@@ -247,5 +237,5 @@ export default function Page({ params }: PageProps) {
 
       </div>
     </>
-  )
+  );
 }

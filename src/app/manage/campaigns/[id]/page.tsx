@@ -37,7 +37,8 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 import CardCampaign from '@/components/ui/card-campaign';
 import { formatDate, calculateDaysBetween, calculateDaysFromEndToToday, resetTimeToMidnight } from '@/utils/date';
 
-import { DataTable, Campaign } from '@/components/DataTableCampaigns';
+// Renommer l'importation de Campaign en DataTableCampaign pour éviter le conflit
+import { DataTable, Campaign as DataTableCampaign } from '@/components/DataTableCampaigns';
 
 // Importer le composant à afficher lorsque la campagne n'existe pas
 import DbCampaign from "@/components/db/DbCampaign"; // Assurez-vous d'importer votre composant
@@ -65,9 +66,21 @@ const deviceData = [
   { device: "Tablet", impressions: 100000, clicks: 5000 },
 ]
 
+// Interface locale Campaign
+export interface Campaign {
+  campaign_id: number;
+  campaign_name: string;
+  advertiser_name: string;
+  advertiser_id: number;
+  campaign_start_date: string;
+  campaign_end_date: string;
+  campaign_crypt: string;
+  budget?: number; // ou 'string' si c'est une chaîne de caractères
+}
+
 export default function Page({ params }: PageProps) {
   const [screenshots, setScreenshots] = useState<File[]>([]);
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [campaign, setCampaign] = useState<Campaign | null>(null); // Utilisation de la campagne locale
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   // Ajoutez un état pour gérer l'ouverture de l'AlertDialog
@@ -97,7 +110,7 @@ export default function Page({ params }: PageProps) {
         const response = await fetch(`/api/db/campaigns?${queryParams}`, { next: { revalidate: 3600 } });
 
         if (!response.ok) {
-          setError(`Campagne non trouvée pour l'ID : ${params.crypt}`);
+          setError(`Campagne non trouvée pour l'ID : ${params.id}`);
           setLoading(false);
           return;
         }
@@ -106,8 +119,7 @@ export default function Page({ params }: PageProps) {
 
         // Vérifiez si des campagnes ont été trouvées
         if (!campaignData.campaigns || !Array.isArray(campaignData.campaigns) || campaignData.campaigns.length === 0) {
-          setError("Aucune campagne trouvée."); // Vous pouvez garder cette ligne si vous souhaitez gérer l'état d'erreur
-          // return <NotFoundComponent />; // Retournez le composant NotFoundComponent
+          setError("Aucune campagne trouvée.");
         }
 
         setCampaign(campaignData.campaigns[0]); // Assurez-vous de récupérer la première campagne
@@ -127,7 +139,6 @@ export default function Page({ params }: PageProps) {
         setDaysFromEndToToday(daysFromEnd);
 
       } catch (error) {
-        /*console.error('Erreur lors de la récupération de la campagne :', error);*/
         setError(`Une erreur s'est produite lors de la récupération de la campagne : ${error}.`);
       } finally {
         setLoading(false);
@@ -153,7 +164,6 @@ export default function Page({ params }: PageProps) {
   }
 
   if (!campaign) {
-    // Charge les données de la campagne si elle n'existe pas
     return <DbCampaign table="campaign" id={params.id} />;
   }
 
@@ -229,10 +239,11 @@ export default function Page({ params }: PageProps) {
             value={`${formattedDateStart} - ${formattedDateEnd}`}
             description={`${daysBetween} jours`}
           />
+
           <CardCampaign
             title="Budget"
             icon={DollarSign}
-            value={campaign ? campaign.budget : 'Chargement...'}
+            value={campaign?.budget ? `${campaign.budget} €` : 'Chargement...'}
             description="1,087 € / jour"
           />
 
@@ -290,7 +301,7 @@ export default function Page({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Performance par appareil</CardTitle>
-                <CardDescription>Impressions et clics par type d'appareil</CardDescription>
+                <CardDescription>Impressions et clics par type d&apos;appareil</CardDescription>
               </CardHeader>
               <CardContent className="pl-2">
                 <ChartContainer

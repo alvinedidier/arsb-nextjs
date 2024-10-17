@@ -47,6 +47,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "embla-carousel-react": "^8.1.5",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.394.0",
     "mysql2": "^3.11.3",
     "next": "^14.2.13",
@@ -67,6 +68,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

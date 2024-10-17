@@ -55,7 +55,12 @@ export const dateUtils = (startDate: string, endDate: string) => {
       endAtMidnight,
     };
   } catch (error) {
-    throw new Error(`Erreur lors de la manipulation des dates: ${error.message}`);
+    // Vérification si 'error' est une instance de 'Error' pour accéder à 'message'
+    if (error instanceof Error) {
+      throw new Error(`Erreur lors de la manipulation des dates: ${error.message}`);
+    } else {
+      throw new Error('Erreur inconnue lors de la manipulation des dates');
+    }
   }
 };
 

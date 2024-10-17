@@ -17,6 +17,16 @@ const DbCampaign: React.FC<DbCampaignProps> = ({ id, table }) => {
         const fetchedData = await getDataFromAPI(id, table);
         const existingData = await checkIfDataExists(id);
 
+        const saveOrUpdateData = async (fetchedData: any, existingData: any) => {
+          if (!existingData) {
+            console.log('Enregistrement des données...');
+            await saveData(fetchedData);
+          } else {
+            console.log('Mise à jour des données...');
+            await updateData(fetchedData);
+          }
+        };
+      
         await saveOrUpdateData(fetchedData, existingData);
 
         setData(fetchedData);
@@ -48,16 +58,6 @@ const DbCampaign: React.FC<DbCampaignProps> = ({ id, table }) => {
     const result = await response.json();
     console.log('Nombre d\'occurrences : ', result.count);
     return result.count;
-  };
-
-  const saveOrUpdateData = async (fetchedData: any, existingData: any) => {
-    if (!existingData) {
-      console.log('Enregistrement des données...');
-      await saveData(fetchedData);
-    } else {
-      console.log('Mise à jour des données...');
-      await updateData(fetchedData);
-    }
   };
 
   const generateCampaignCrypt = (campaign_id: number) => {
@@ -144,7 +144,7 @@ const DbCampaign: React.FC<DbCampaignProps> = ({ id, table }) => {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
         <strong className="font-bold">Aucune donnée trouvée.</strong>
-        <p className="mt-2">Les données de la table '{table}' (ID: {id}) ont été récupérées et traitées.</p>
+        <p className="mt-2">Les données de la table {table} (ID: {id}) ont été récupérées et traitées.</p>
       </div>
     </div>
   );

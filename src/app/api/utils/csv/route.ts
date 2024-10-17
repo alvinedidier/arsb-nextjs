@@ -10,11 +10,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json(); // Extraire le body de la requête
     const campaignId = body.campaignId; // Récupérer le campagne ID
     const csvData = body.csv; // Utilise directement le champ 'csv'
-    const useVU = body.useVU; 
+    const useVU = body.useVU;
 
     if (!csvData) {
       return NextResponse.json({ error: 'Missing csvData parameter in request body' }, { status: 400 });
-    } 
+    }
 
     if (!campaignId) {
       return NextResponse.json({ error: 'Missing campaignId parameter in request body' }, { status: 400 });
@@ -25,8 +25,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse the CSV data using csv-parser
-    const results = [];
+    const results: Record<string, any>[] = []; // Type explicit: array of objects (records)
     const stream = Readable.from(csvData);
+
     await new Promise((resolve, reject) => {
       stream
         .pipe(csv({ separator: ';' }))

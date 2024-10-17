@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server'; // Importer le type NextRequest pour typer le paramètre
 const pool = require('@/lib/db');
 
-export async function GET(request) {
+export async function GET(request: NextRequest) {
   try {
     // Récupérer les paramètres de la requête
     const { searchParams } = new URL(request.url);
@@ -56,9 +57,9 @@ export async function GET(request) {
     const customizedScript = searchParams.get('customized_script');
     const saleChannelId = searchParams.get('sale_channel_id');
 
-    // Ajouter une pagination pour limiter les résultats
-    const limit = parseInt(searchParams.get('limit')) || 10; // Nombre de résultats par page
-    const offset = parseInt(searchParams.get('offset')) || 0; // À ajuster selon la page demandée
+     // Ajouter la pagination (si nécessaire)
+     const limit = parseInt(searchParams.get('limit') ?? '10', 10);
+     const offset = parseInt(searchParams.get('offset') ?? '0', 10);
 
     // Construire la requête SQL pour récupérer les campagnes, les insertions, et les informations associées
     let query = `
@@ -275,7 +276,6 @@ export async function GET(request) {
       queryParams.push(saleChannelId);
     }
 
-    // Ajouter la pagination
     query += ' LIMIT ? OFFSET ?';
     queryParams.push(limit, offset);
 
@@ -290,15 +290,21 @@ export async function GET(request) {
     // Retourner les résultats
     return NextResponse.json({ campaigns: rows });
   } catch (error) {
-    console.error('Erreur lors de la récupération des insertions :', error);
+    console.error('Erreur lors de la récupération des campagnes :', error);
 
-    // Retourner une réponse d'erreur plus détaillée
-    if (error.code === 'ER_ACCESS_DENIED_ERROR') {
-      return NextResponse.json({ error: 'Erreur de connexion à la base de données' }, { status: 500 });
-    } else if (error.code === 'ER_BAD_DB_ERROR') {
-      return NextResponse.json({ error: 'Base de données introuvable' }, { status: 500 });
-    } else {
-      return NextResponse.json({ error: 'Erreur lors de la récupération des insertions' }, { status: 500 });
+    // Vérification que l'erreur est bien un objet avec une propriété `code`
+    if (error instanceof Error && 'code' in error) {
+      const sqlError = error as { code: string };
+
+      // Retourner une réponse d'erreur détaillée selon le code d'erreur SQL
+      if (sqlError.code === 'ER_ACCESS_DENIED_ERROR') {
+        return NextResponse.json({ error: 'Erreur de connexion à la base de données' }, { status: 500 });
+      } else if (sqlError.code === 'ER_BAD_DB_ERROR') {
+        return NextResponse.json({ error: 'Base de données introuvable' }, { status: 500 });
+      }
     }
+
+    // Si l'erreur ne correspond pas aux cas ci-dessus
+    return NextResponse.json({ error: 'Erreur lors de la récupération des campagnes' }, { status: 500 });
   }
 }

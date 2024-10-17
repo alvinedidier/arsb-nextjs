@@ -29,7 +29,7 @@ export const useApiRequest = (url: string, options: RequestInit) => {
     };
 
     fetchData();
-  }, [url]);
+  }, [url, options]);
 
   return { data, loading, error };
 };

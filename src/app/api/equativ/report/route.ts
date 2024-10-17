@@ -23,6 +23,11 @@ async function fetchReportData(startDate: string, endDate: string, campaignId: s
   const apiUrl = buildApiUrl("report", { campaignId });
   console.log('ApiUrl : ', apiUrl);
 
+  // Vérifier si `apiUrl` est null avant de faire l'appel à l'API
+  if (!apiUrl) {
+    throw new Error('API URL is null');
+  }
+
   const reportData = method === 'campaign'
     ? createRequestCampaign(startDate, endDate, campaignId)
     : createRequestCampaignVU(startDate, endDate, campaignId);
@@ -87,7 +92,13 @@ export async function GET(request: Request) {
 
   } catch (error) {
     console.error('Error generating report:', error);
-    return NextResponse.json({ error: 'Failed to fetch report data', details: error.message }, { status: 500 });
+
+    // Vérifier si l'erreur est une instance d'Error et accéder à la propriété `message`
+    if (error instanceof Error) {
+      return NextResponse.json({ error: 'Failed to fetch report data', details: error.message }, { status: 500 });
+    } else {
+      return NextResponse.json({ error: 'Failed to fetch report data' }, { status: 500 });
+    }
   }
 }
 

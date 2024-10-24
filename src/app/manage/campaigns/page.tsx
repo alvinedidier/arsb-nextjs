@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { DataTable, Campaign } from '@/components/DataTableCampaigns';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -25,6 +33,18 @@ export default function CampaignsPage() {
 
   return (
     <div className="p-8">
+       <Breadcrumb className="py-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Accueil</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Campagnes</BreadcrumbPage>
+            </BreadcrumbItem>            
+          </BreadcrumbList>
+        </Breadcrumb>
+
       <h1 className="text-3xl mb-6">Liste les campagnes</h1>
 
       {error && <div className="text-red-500">{error}</div>}

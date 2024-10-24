@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json(); // Extraire le body de la requête
     const campaignId = body.campaignId; // Récupérer le campagne ID
     const csvData = body.csv; // Utilise directement le champ 'csv'
-    const useVU = body.useVU;
+    const useVu = body.useVu;
 
     if (!csvData) {
       return NextResponse.json({ error: 'Missing csvData parameter in request body' }, { status: 400 });
@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing campaignId parameter in request body' }, { status: 400 });
     }
 
-    if (!useVU) {
-      return NextResponse.json({ error: 'Missing useVU parameter in request body' }, { status: 400 });
+    if (typeof useVu !== 'boolean') {
+      return NextResponse.json({ error: 'Missing useVu parameter in request body' }, { status: 400 });
     }
 
     // Parse the CSV data using csv-parser
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const { year, month, day } = getCurrentDateComponents();
 
     // Crée un fichier dynamique
-    const fileName = `campaignId-${campaignId}-${useVU ? 'VU' : 'ALL'}.json`;
+    const fileName = `campaignId-${campaignId}-${useVu ? 'VU' : 'ALL'}.json`;
     const filePath = path.join(process.cwd(), 'data/reporting/', year.toString(), month, day, fileName);
 
     // S'assure que le dossier 'data' existe et gère les erreurs d'écriture de fichier

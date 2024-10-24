@@ -1,7 +1,7 @@
 // route.ts
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server'; // Importer le type NextRequest pour typer le paramètre
-const pool = require('@/lib/db');
+import type { NextRequest } from 'next/server';
+import pool from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
     const limitParam = searchParams.get('limit');
     const offsetParam = searchParams.get('offset');
     
-    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
-    const offset = offsetParam ? parseInt(offsetParam, 10) : undefined;
+    const limit = limitParam ? parseInt(limitParam, 10) : ''; // Valeur par défaut : 10
+    const offset = offsetParam ? parseInt(offsetParam, 10) : ''; // Valeur par défaut : 0
 
     // Construire la requête SQL pour récupérer les campagnes et les informations des annonceurs associées
     let query = `
@@ -37,10 +37,11 @@ export async function GET(request: NextRequest) {
         a.advertiser_name
       FROM asb_campaigns c
       INNER JOIN asb_advertisers a ON c.advertiser_id = a.advertiser_id
-    `; //  WHERE 1=1
+      WHERE 1=1
+    `;
 
     // Ajouter des filtres selon les paramètres fournis
-    const queryParams = [];
+    const queryParams: (string | number)[] = [];
     if (campaignId) {
       query += ' AND c.campaign_id = ?';
       queryParams.push(campaignId);
@@ -86,10 +87,17 @@ export async function GET(request: NextRequest) {
       queryParams.push(updatedAt);
     }
 
-    query += ' LIMIT ? OFFSET ?';
-    queryParams.push(limit, offset);
+    query += ` ORDER BY ${orderBy} ${order}`;
+    if (limit) {
+      query += ` LIMIT ?`;
+      queryParams.push(limit);
+    }
 
-    // console.log(query)
+    if (offset) {
+      query += `  OFFSET ?`;
+      queryParams.push(offset);
+    }
+   // queryParams.push(limit, offset);
 
     // Exécuter la requête SQL avec des paramètres préparés pour éviter les injections SQL
     const [rows] = await pool.query(query, queryParams);
@@ -104,11 +112,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Erreur lors de la récupération des campagnes :', error);
 
-    // Vérification que l'erreur est bien un objet avec une propriété `code`
+    // Retourner une réponse d'erreur détaillée selon le code d'erreur SQL
     if (error instanceof Error && 'code' in error) {
       const sqlError = error as { code: string };
 
-      // Retourner une réponse d'erreur détaillée selon le code d'erreur SQL
       if (sqlError.code === 'ER_ACCESS_DENIED_ERROR') {
         return NextResponse.json({ error: 'Erreur de connexion à la base de données' }, { status: 500 });
       } else if (sqlError.code === 'ER_BAD_DB_ERROR') {

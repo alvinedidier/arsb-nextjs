@@ -5,10 +5,9 @@ interface ReportingWorkflowProps {
   startDate: string;
   endDate: string;
   campaignId: number;
-  useVu: boolean;
 }
 
-const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDate, campaignId, useVu }) => {
+const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDate, campaignId }) => {
   const [reportId, setReportId] = useState<string | null>(null);
   const [reportIdVU, setReportIdVU] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>('Chargement du rapport...');
@@ -66,7 +65,8 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
 
   const fetchReportId = async () => {
     try {
-      // console.log(`ReportBody : ${JSON.stringify(createRequestCampaign(startDate, endDate, campaignId))}`)
+     // console.log(`ReportBody : ${JSON.stringify(createRequestCampaign(startDate, endDate, campaignId))}`)
+
       const responseCampaign = await fetch("https://supply-api.eqtv.io/insights/report-async/", {
         method: 'POST',
         headers: {
@@ -135,12 +135,11 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
       }
 
       const csvText = await response.json();
-      const csvTextData = csvText.csvData;
-      console.log("csvTextData: ",csvTextData);
+      console.log("csvText: ",csvText.csvData);
       if (csvText) {
-        setCsvData(csvTextData);
+        setCsvData(csvText.csvData);
         setLoadingMessage('Le fichier CSV a été récupéré avec succès');
-        fetchCsvDownload(csvTextData);
+        fetchCsvDownload(csvText.csvData);
       } else {
         setLoadingMessage('Impossible de récupérer le fichier CSV');
       }
@@ -154,6 +153,7 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
   const fetchReportIdVU = useCallback(async () => {
     try {
      // console.log(`ReportBody : ${JSON.stringify(createRequestCampaign(startDate, endDate, campaignId))}`)
+
       const responseCampaign = await fetch("https://supply-api.eqtv.io/insights/report-async/", {
         method: 'POST',
         headers: {
@@ -176,15 +176,15 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
       console.error(error);
       setError('Erreur lors de la création du reporting');
     }
-  }, [startDate, endDate, campaignId, useVu]);
+  }, [startDate, endDate, campaignId]);
 
-  const fetchCsvDownload = async (csvData: string, useVu: boolean) => {
+  const fetchCsvDownload = async (csvData: string) => {
     try {
    
-      console.log('Loaded CSV :'+JSON.stringify({csvData, campaignId: campaignId, useVu : useVu}))
-      const response = await fetch("/api/utils/csv", {
+     // console.log('Loaded CSV :'+JSON.stringify({csvData, campaignId: campaignId}))
+       const response = await fetch("/api/utils/csv", {
         method: 'POST',
-        body: JSON.stringify({csv : csvData, campaignId: campaignId, useVU : useVu}),
+        body: JSON.stringify({csv : csvData, campaignId: campaignId}),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -205,24 +205,24 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
   };
 
   const fetchReportDetailsVU = async () => {
-    if (!reportIdVU) return;
+    if (!reportId) return;
 
     try {
-      const responseVU = await fetch(`https://supply-api.eqtv.io/insights/report-async/${reportIdVU}`, {
+      const response = await fetch(`https://supply-api.eqtv.io/insights/report-async/${reportId}`, {
         method: 'GET',
         headers: {
           Authorization: `Basic ${btoa(`${process.env.NEXT_PUBLIC_SMARTADSERVER_LOGIN}:${process.env.NEXT_PUBLIC_SMARTADSERVER_PASSWORD}`)}`,
         },
       });
 
-      const reportDetailsVU = await responseVU.json();
-      console.log('reportDetails:', reportDetailsVU);
+      const reportDetails = await response.json();
+      console.log('reportDetails:', reportDetails);
 
-      const instanceIdVU = reportDetailsVU.instanceId;
+      const instanceId = reportDetails.instanceId;
 
-      if (instanceIdVU) {
-        setLoadingMessage(`Téléchargement du fichier CSV pour l'instance ID : ${instanceIdVU}...`);
-        fetchCsvData(instanceIdVU);
+      if (instanceId) {
+        setLoadingMessage(`Téléchargement du fichier CSV pour l'instance ID : ${instanceId}...`);
+        fetchCsvData(instanceId);
       } else {
         setLoadingMessage('Merci de votre patience. La récupération est en cours...');
         setTimeout(fetchReportDetails, 20000);
@@ -237,25 +237,25 @@ const ReportingWorkflow: React.FC<ReportingWorkflowProps> = ({ startDate, endDat
     if (!reportId) {
      fetchReportId();
     }
-  }, [reportId]);
+  }, [startDate, fetchReportId]);
 
   useEffect(() => {
     if (reportId) {
       fetchReportDetails();
     }
-  }, [reportId]);
+  }, [reportId,fetchReportDetails]);
 
    useEffect(() => {
     if (!reportIdVU) {
      fetchReportIdVU();
     }
-  }, [reportIdVU]);
+  }, [reportIdVU,fetchReportIdVU]);
 
   useEffect(() => {
     if (reportIdVU) {
       fetchReportDetailsVU();
     }
-  }, [reportIdVU]);
+  }, [reportIdVU,fetchReportDetailsVU]);
 
   return (
     <div>

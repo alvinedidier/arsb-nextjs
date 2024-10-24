@@ -99,7 +99,7 @@ export default function Page({ params }: PageProps) {
     };
 
     fetchCampaign();
-  }, [params.crypt]);
+  }, [params.crypt, daysBetween]);
 
   const handleScreenshotUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -136,11 +136,17 @@ export default function Page({ params }: PageProps) {
     <>
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-4">Demande de Rapport</h1>
+        
         <ReportWorkflowRequest 
           startDate={campaign.campaign_start_date}
           endDate={campaign.campaign_end_date}
           campaignId={campaign.campaign_id}
         />
+        <hr />
+        <ul>
+          <li>Jours entre : {daysBetween}</li>
+        </ul>
+
       </div>
 
       <hr />

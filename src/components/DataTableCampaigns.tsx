@@ -211,7 +211,9 @@ export const columns: ColumnDef<Campaign>[] = [
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="hover:bg-black hover:text-white text-red-600 cursor-pointer">
+              className="hover:bg-black hover:text-white text-red-600 cursor-pointer"
+              onClick={() => setIsDialogOpen(true)}
+            >
               <Recycle className="mr-2 h-4 w-4" />
               <span>Supprimer</span>
             </DropdownMenuItem>
@@ -255,35 +257,36 @@ export function DataTable({ data }: { data: Campaign[] }) {
     }, [data]);  // Se déclenche chaque fois que 'data' change.
   */
 
-    const table = useReactTable({
-      data,
-      columns,
-      state: {
-        sorting,
-        columnFilters,
-        columnVisibility,
-        rowSelection,
-        globalFilter,
-      },
-      onSortingChange: setSorting,
-      onGlobalFilterChange: setGlobalFilter,
-      onColumnFiltersChange: setColumnFilters,
-      onColumnVisibilityChange: setColumnVisibility,
-      onRowSelectionChange: setRowSelection,
-      getCoreRowModel: getCoreRowModel(),
-      getPaginationRowModel: getPaginationRowModel(),
-      getSortedRowModel: getSortedRowModel(),
-      getFilteredRowModel: getFilteredRowModel(),
-      globalFilterFn: (row, columnId, filterValue) => {
-        const searchValue = filterValue.toLowerCase();
-        return (
-          row.original.campaign_id.toString().includes(searchValue) ||
-          row.original.campaign_name.toLowerCase().includes(searchValue) ||
-          row.original.advertiser_name.toLowerCase().includes(searchValue)
-        );
-      },
-      initialState: { pagination: { pageSize: 100 } }, // Pagination fixée à 100 éléments par page
-    });
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+      globalFilter,
+    },
+    globalFilterFn: (row, columnId, filterValue) => {
+      const searchValue = filterValue.toLowerCase();
+      return (
+        row.original.campaign_id.toString().includes(searchValue) ||
+        row.original.campaign_name.toLowerCase().includes(searchValue) ||
+        row.original.advertiser_name.toLowerCase().includes(searchValue)
+      );
+    },
+    initialState: { pagination: { pageSize: 100 } },  // Pagination fixée à 100 éléments par page
+  });
 
   return (
     <div className="w-full">
